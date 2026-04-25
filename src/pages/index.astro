@@ -34,31 +34,6 @@ const initialBoxes = drakeFrontpageLayout.boxes;
 			data-default-image={templates[0].src}
 			data-initial-boxes={JSON.stringify(initialBoxes)}
 		>
-			<aside class="card border border-base-300 bg-base-100 shadow-xl">
-				<div class="card-body gap-4">
-					<div>
-						<h2 class="card-title">Templates</h2>
-					</div>
-
-					<label class="form-control gap-2">
-						<span class="label-text font-semibold">Upload your own image</span>
-						<input id="image-upload" type="file" accept="image/*" class="file-input file-input-bordered w-full" />
-						<span class="text-xs text-base-content/60">Local browser only. Nothing is stored.</span>
-					</label>
-
-					<div id="template-grid" class="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-2">
-					</div>
-
-					<div class="flex items-center justify-between gap-3 text-sm text-base-content/60">
-						<p id="template-page-info">Page 1 of {Math.ceil(templates.length / 8)}</p>
-						<div class="join">
-							<button id="template-prev" type="button" class="btn btn-sm btn-outline join-item">Prev</button>
-							<button id="template-next" type="button" class="btn btn-sm btn-outline join-item">Next</button>
-						</div>
-					</div>
-				</div>
-			</aside>
-
 			<section class="card border border-base-300 bg-base-100 shadow-xl">
 				<div class="card-body gap-4">
 					<div class="flex flex-wrap items-start justify-between gap-3">
@@ -183,6 +158,31 @@ const initialBoxes = drakeFrontpageLayout.boxes;
 							<button id="delete-text-box" type="button" class="btn btn-error btn-outline flex-1">Delete</button>
 						</div>
 					</form>
+				</div>
+			</aside>
+
+			<aside class="card border border-base-300 bg-base-100 shadow-xl">
+				<div class="card-body gap-4">
+					<div>
+						<h2 class="card-title">Templates</h2>
+					</div>
+
+					<label class="form-control gap-2">
+						<span class="label-text font-semibold">Upload your own image</span>
+						<input id="image-upload" type="file" accept="image/*" class="file-input file-input-bordered w-full" />
+						<span class="text-xs text-base-content/60">Local browser only. Nothing is stored.</span>
+					</label>
+
+					<div id="template-grid" class="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-2">
+					</div>
+
+					<div class="flex items-center justify-between gap-3 text-sm text-base-content/60">
+						<p id="template-page-info">Page 1 of {Math.ceil(templates.length / 8)}</p>
+						<div class="join">
+							<button id="template-prev" type="button" class="btn btn-sm btn-outline join-item">Prev</button>
+							<button id="template-next" type="button" class="btn btn-sm btn-outline join-item">Next</button>
+						</div>
+					</div>
 				</div>
 			</aside>
 		</main>
