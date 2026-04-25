@@ -6,6 +6,7 @@ if (!root) {
 
 const templates = JSON.parse(root.dataset.templates ?? '[]');
 const defaultImage = root.dataset.defaultImage ?? templates[0]?.src ?? '';
+const initialBoxes = JSON.parse(root.dataset.initialBoxes ?? 'null');
 const templateMap = new Map(templates.map((template) => [template.id, template]));
 
 const refs = {
@@ -78,11 +79,11 @@ const sanitizeBox = (box) => {
 	};
 };
 
-const createBoxesFromLayout = (layoutBoxes = defaultLayoutBoxes) =>
+const createBoxesFromLayout = (layoutBoxes = defaultLayoutBoxes, preserveText = false) =>
 	layoutBoxes.map((box) =>
 		sanitizeBox({
 			id: crypto.randomUUID(),
-			text: '',
+			text: preserveText ? (typeof box.text === 'string' ? box.text : '') : '',
 			x: box.x,
 			y: box.y,
 			width: box.width,
@@ -105,7 +106,7 @@ const state = {
 		naturalWidth: 1,
 		naturalHeight: 1
 	},
-	boxes: createBoxesFromLayout(templates[0]?.defaultBoxes),
+	boxes: createBoxesFromLayout(initialBoxes ?? templates[0]?.defaultBoxes, Boolean(initialBoxes)),
 	selectedId: null,
 	interaction: null
 };

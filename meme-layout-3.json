@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "boxes": [
+    {
+      "id": "c47f1436-a265-435b-995a-10b9b33b1b5d",
+      "text": "Using an adfilled memegenerator",
+      "x": 51.02,
+      "y": 1.02,
+      "width": 47.96,
+      "height": 47.96,
+      "fontSize": 27,
+      "outlineWidth": 1,
+      "align": "center",
+      "rotation": 0,
+      "verticalAlign": "middle"
+    },
+    {
+      "id": "ed8ce50f-b566-425e-b0c4-615994ebf764",
+      "text": "Develop your own memegenerator",
+      "x": 51.02,
+      "y": 50.99,
+      "width": 47.96,
+      "height": 47.96,
+      "fontSize": 27,
+      "outlineWidth": 1,
+      "align": "center",
+      "rotation": 0,
+      "verticalAlign": "middle"
+    }
+  ]
+}

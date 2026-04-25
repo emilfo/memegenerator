@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { memeTemplates } from '../data/meme-templates.js';
+import drakeFrontpageLayout from '../../meme-layout-3.json';
 
 const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
 const templates = memeTemplates.map((template) => ({
@@ -9,6 +10,7 @@ const templates = memeTemplates.map((template) => ({
 	src: `${base}memes/${template.filename}`,
 	defaultBoxes: template.defaultBoxes
 }));
+const initialBoxes = drakeFrontpageLayout.boxes;
 ---
 
 <Layout title="Meme Generator" description="Create memes in the browser and export them as images.">
@@ -30,6 +32,7 @@ const templates = memeTemplates.map((template) => ({
 			class="grid gap-6 lg:grid-cols-[20rem_minmax(0,1fr)_20rem]"
 			data-templates={JSON.stringify(templates)}
 			data-default-image={templates[0].src}
+			data-initial-boxes={JSON.stringify(initialBoxes)}
 		>
 			<aside class="card border border-base-300 bg-base-100 shadow-xl">
 				<div class="card-body gap-4">
