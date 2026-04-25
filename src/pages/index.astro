@@ -47,15 +47,15 @@ const initialBoxes = drakeFrontpageLayout.boxes;
 						<span class="text-xs text-base-content/60">Local browser only. Nothing is stored.</span>
 					</label>
 
+					<div id="template-grid" class="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-2">
+					</div>
+
 					<div class="flex items-center justify-between gap-3 text-sm text-base-content/60">
 						<p id="template-page-info">Page 1 of {Math.ceil(templates.length / 8)}</p>
 						<div class="join">
 							<button id="template-prev" type="button" class="btn btn-sm btn-outline join-item">Prev</button>
 							<button id="template-next" type="button" class="btn btn-sm btn-outline join-item">Next</button>
 						</div>
-					</div>
-
-					<div id="template-grid" class="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-2">
 					</div>
 				</div>
 			</aside>
