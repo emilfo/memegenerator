@@ -26,7 +26,6 @@ select {
 	position: relative;
 	display: grid;
 	width: min(100%, 860px);
-	border-radius: 1.5rem;
 	overflow: hidden;
 	background:
 		radial-gradient(circle at top, rgb(255 255 255 / 0.14), transparent 36%),
