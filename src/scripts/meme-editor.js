@@ -438,24 +438,33 @@ const exportMeme = async () => {
 	context.fillStyle = '#ffffff';
 	context.strokeStyle = '#000000';
 	context.lineJoin = 'round';
+	context.lineCap = 'round';
 
 	state.boxes.forEach((box) => {
 		const x = (box.x / 100) * canvas.width;
 		const y = (box.y / 100) * canvas.height;
 		const width = (box.width / 100) * canvas.width;
 		const height = (box.height / 100) * canvas.height;
-		const fontSize = box.fontSize * (canvas.width / refs.stage.clientWidth);
+		const scale = canvas.width / refs.stage.clientWidth;
+		const fontSize = box.fontSize * scale;
 		const centerX = x + width / 2;
 		const centerY = y + height / 2;
 		const localX = -width / 2;
 		const localY = -height / 2;
+		const outlineWidth = Math.max(0, box.outlineWidth * scale * 1.15);
+		const shadowBlur = 6 * scale;
+		const shadowOffsetY = 2 * scale;
 
 		context.save();
 		context.translate(centerX, centerY);
 		context.rotate((box.rotation * Math.PI) / 180);
 		context.font = `900 ${fontSize}px Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif`;
 		context.textAlign = box.align;
-		context.lineWidth = Math.max(0, box.outlineWidth * (canvas.width / refs.stage.clientWidth));
+		context.lineWidth = outlineWidth;
+		context.shadowColor = 'rgba(0, 0, 0, 0.45)';
+		context.shadowBlur = shadowBlur;
+		context.shadowOffsetX = 0;
+		context.shadowOffsetY = shadowOffsetY;
 
 		const lines = fitTextLines(context, box.text || 'TEXT', width);
 		const lineHeight = fontSize * 0.95;
