@@ -8,13 +8,17 @@ const templates = JSON.parse(root.dataset.templates ?? '[]');
 const defaultImage = root.dataset.defaultImage ?? templates[0]?.src ?? '';
 const initialBoxes = JSON.parse(root.dataset.initialBoxes ?? 'null');
 const templateMap = new Map(templates.map((template) => [template.id, template]));
+const templatesPerPage = 8;
 
 const refs = {
+	templateGrid: document.querySelector('#template-grid'),
+	templatePrevButton: document.querySelector('#template-prev'),
+	templateNextButton: document.querySelector('#template-next'),
+	templatePageInfo: document.querySelector('#template-page-info'),
 	stage: document.querySelector('#editor-stage'),
 	image: document.querySelector('#editor-image'),
 	textLayer: document.querySelector('#text-layer'),
 	imageName: document.querySelector('#active-image-name'),
-	templateButtons: [...document.querySelectorAll('.template-card')],
 	uploadInput: document.querySelector('#image-upload'),
 	addTextButton: document.querySelector('#add-text-box'),
 	downloadButton: document.querySelector('#download-meme'),
@@ -103,6 +107,8 @@ const createBoxesFromLayout = (layoutBoxes = defaultLayoutBoxes, preserveText = 
 const createDefaultBoxes = () => createBoxesFromLayout();
 
 const state = {
+	templatePage: 0,
+	templateImageObserver: null,
 	image: {
 		src: defaultImage,
 		name: templates[0]?.name ?? 'Custom image',
@@ -129,8 +135,82 @@ const updateStageAspectRatio = () => {
 	refs.stage.style.aspectRatio = `${state.image.naturalWidth} / ${state.image.naturalHeight}`;
 };
 
+const getTemplateButtons = () => [...refs.templateGrid.querySelectorAll('.template-card')];
+
+const connectTemplateImageObserver = () => {
+	state.templateImageObserver?.disconnect();
+
+	state.templateImageObserver = new IntersectionObserver(
+		(entries, observer) => {
+			entries.forEach((entry) => {
+				if (!entry.isIntersecting) {
+					return;
+				}
+
+				const image = entry.target;
+				if (image.dataset.src) {
+					image.src = image.dataset.src;
+					image.removeAttribute('data-src');
+				}
+
+				observer.unobserve(image);
+			});
+		},
+		{ root: null, rootMargin: '100px 0px', threshold: 0.01 }
+	);
+
+	refs.templateGrid.querySelectorAll('img[data-src]').forEach((image) => {
+		state.templateImageObserver.observe(image);
+	});
+};
+
+const renderTemplateGrid = () => {
+	const totalPages = Math.ceil(templates.length / templatesPerPage);
+	const start = state.templatePage * templatesPerPage;
+	const visibleTemplates = templates.slice(start, start + templatesPerPage);
+
+	refs.templateGrid.innerHTML = '';
+
+	visibleTemplates.forEach((template) => {
+		const button = document.createElement('button');
+		button.type = 'button';
+		button.className = 'template-card card overflow-hidden border border-base-300 bg-base-200 text-left transition hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-lg';
+		button.dataset.templateId = template.id;
+		button.dataset.templateSrc = template.src;
+
+		const figure = document.createElement('figure');
+		figure.className = 'aspect-square overflow-hidden bg-base-300';
+
+		const image = document.createElement('img');
+		image.alt = template.name;
+		image.className = 'h-full w-full object-cover';
+		image.loading = 'lazy';
+		image.decoding = 'async';
+		image.dataset.src = template.src;
+
+		const body = document.createElement('div');
+		body.className = 'card-body gap-1 p-3';
+
+		const title = document.createElement('p');
+		title.className = 'text-sm font-semibold leading-tight';
+		title.textContent = template.name;
+
+		body.append(title);
+		figure.append(image);
+		button.append(figure, body);
+		button.addEventListener('click', () => selectTemplate(template));
+		refs.templateGrid.append(button);
+	});
+
+	refs.templatePageInfo.textContent = `Page ${state.templatePage + 1} of ${totalPages}`;
+	refs.templatePrevButton.disabled = state.templatePage === 0;
+	refs.templateNextButton.disabled = state.templatePage >= totalPages - 1;
+	connectTemplateImageObserver();
+	renderTemplateSelection();
+};
+
 const renderTemplateSelection = () => {
-	refs.templateButtons.forEach((button) => {
+	getTemplateButtons().forEach((button) => {
 		const active = button.dataset.templateSrc === state.image.src;
 		button.classList.toggle('is-active', active);
 	});
@@ -534,10 +614,14 @@ window.addEventListener('pointermove', handlePointerMove);
 window.addEventListener('pointerup', stopInteraction);
 window.addEventListener('pointercancel', stopInteraction);
 
-refs.templateButtons.forEach((button) => {
-	button.addEventListener('click', () => {
-		selectTemplate(templateMap.get(button.dataset.templateId));
-	});
+refs.templatePrevButton.addEventListener('click', () => {
+	state.templatePage = clamp(state.templatePage - 1, 0, Math.ceil(templates.length / templatesPerPage) - 1);
+	renderTemplateGrid();
+});
+
+refs.templateNextButton.addEventListener('click', () => {
+	state.templatePage = clamp(state.templatePage + 1, 0, Math.ceil(templates.length / templatesPerPage) - 1);
+	renderTemplateGrid();
 });
 
 refs.uploadInput.addEventListener('change', (event) => {
@@ -645,7 +729,7 @@ window.addEventListener('beforeunload', () => {
 	}
 });
 
-renderTemplateSelection();
+renderTemplateGrid();
 renderBoxes();
 renderForm();
 
