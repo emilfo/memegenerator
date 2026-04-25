@@ -28,6 +28,8 @@ const refs = {
 	fontSizeValue: document.querySelector('#font-size-value'),
 	outlineWidthInput: document.querySelector('#outline-width-input'),
 	outlineWidthValue: document.querySelector('#outline-width-value'),
+	rotationInput: document.querySelector('#rotation-input'),
+	rotationValue: document.querySelector('#rotation-value'),
 	widthInput: document.querySelector('#width-input'),
 	widthValue: document.querySelector('#width-value'),
 	heightInput: document.querySelector('#height-input'),
@@ -177,6 +179,7 @@ const renderBoxes = () => {
 const updateValueLabels = (box) => {
 	refs.fontSizeValue.textContent = `${box.fontSize}px`;
 	refs.outlineWidthValue.textContent = `${box.outlineWidth}px`;
+	refs.rotationValue.textContent = `${Math.round(box.rotation)}°`;
 	refs.widthValue.textContent = `${box.width}%`;
 	refs.heightValue.textContent = `${box.height}%`;
 	refs.xValue.textContent = `${box.x}%`;
@@ -199,6 +202,7 @@ const renderForm = () => {
 	refs.alignInput.value = box.align;
 	refs.fontSizeInput.value = String(box.fontSize);
 	refs.outlineWidthInput.value = String(box.outlineWidth);
+	refs.rotationInput.value = String(Math.round(box.rotation));
 	refs.widthInput.value = String(box.width);
 	refs.heightInput.value = String(box.height);
 	refs.xInput.value = String(Math.round(box.x));
@@ -581,6 +585,7 @@ refs.alignInput.addEventListener('change', (event) => {
 [
 	[refs.fontSizeInput, 'fontSize'],
 	[refs.outlineWidthInput, 'outlineWidth'],
+	[refs.rotationInput, 'rotation'],
 	[refs.widthInput, 'width'],
 	[refs.heightInput, 'height'],
 	[refs.xInput, 'x'],
