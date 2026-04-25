@@ -17,26 +17,13 @@ const templates = [
 <Layout title="Meme Generator" description="Create memes in the browser and export them as images.">
 	<div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:px-6">
 		<header class="hero overflow-hidden rounded-box border border-base-300 bg-base-100 shadow-xl">
-			<div class="hero-content flex-col items-start gap-5 lg:flex-row lg:items-center lg:justify-between">
+			<div class="hero-content justify-start">
 				<div class="max-w-2xl space-y-3">
-					<div class="badge badge-primary badge-outline">Astro 6 + daisyUI</div>
 					<h1 class="text-4xl font-black tracking-tight text-base-content sm:text-5xl">Meme Generator</h1>
 					<p class="text-base text-base-content/70 sm:text-lg">
 						Pick a built-in meme, upload your own image, add draggable text boxes, and export the result.
 						Uploads stay in your browser only.
 					</p>
-				</div>
-				<div class="stats stats-vertical border border-base-300 bg-base-200 shadow sm:stats-horizontal">
-					<div class="stat px-5 py-4">
-						<div class="stat-title">Default layout</div>
-						<div class="stat-value text-primary">2</div>
-						<div class="stat-desc">Top + bottom captions</div>
-					</div>
-					<div class="stat px-5 py-4">
-						<div class="stat-title">Export</div>
-						<div class="stat-value text-secondary">PNG</div>
-						<div class="stat-desc">Client-side download</div>
-					</div>
 				</div>
 			</div>
 		</header>
@@ -84,14 +71,21 @@ const templates = [
 
 			<section class="card border border-base-300 bg-base-100 shadow-xl">
 				<div class="card-body gap-4">
-					<div class="flex flex-wrap items-center justify-between gap-3">
+					<div class="flex flex-wrap items-start justify-between gap-3">
 						<div>
 							<h2 class="card-title">Editor</h2>
 							<p id="active-image-name" class="text-sm text-base-content/60">Drake Hotline Bling</p>
 						</div>
-						<div class="join">
-							<button id="add-text-box" type="button" class="btn btn-primary join-item">Add text box</button>
-							<button id="download-meme" type="button" class="btn btn-secondary join-item">Download PNG</button>
+						<div class="flex flex-wrap justify-end gap-2">
+							<div class="join">
+								<button id="add-text-box" type="button" class="btn btn-primary join-item">Add text box</button>
+								<button id="download-meme" type="button" class="btn btn-secondary join-item">Download PNG</button>
+							</div>
+							<div class="join">
+								<button id="export-layout" type="button" class="btn btn-outline join-item">Export layout</button>
+								<label class="btn btn-outline join-item" for="import-layout">Import layout</label>
+							</div>
+							<input id="import-layout" type="file" accept="application/json,.json" class="hidden" />
 						</div>
 					</div>
 
@@ -103,7 +97,7 @@ const templates = [
 					</div>
 
 					<p class="text-sm text-base-content/60">
-						Drag a caption to move it. Use the corner handle to resize its box. Text uses an Impact-style meme treatment.
+						Drag a caption to move it. Use the corner handle to resize its box. Layout export/import saves just the text box positions and styles.
 					</p>
 				</div>
 			</section>
@@ -140,6 +134,14 @@ const templates = [
 								<span id="font-size-value" class="font-mono text-base-content/60"></span>
 							</div>
 							<input id="font-size-input" type="range" min="20" max="120" step="1" class="range range-primary" />
+						</label>
+
+						<label class="form-control gap-2">
+							<div class="flex items-center justify-between text-sm">
+								<span class="label-text font-semibold">Outline width</span>
+								<span id="outline-width-value" class="font-mono text-base-content/60"></span>
+							</div>
+							<input id="outline-width-input" type="range" min="0" max="8" step="0.5" class="range range-secondary" />
 						</label>
 
 						<div class="grid grid-cols-2 gap-3">

@@ -75,14 +75,9 @@ select {
 	font-weight: 900;
 	line-height: 0.95;
 	letter-spacing: 0.04em;
-	-webkit-text-stroke: 2px black;
-	text-shadow:
-		2px 2px 0 #000,
-		-2px 2px 0 #000,
-		2px -2px 0 #000,
-		-2px -2px 0 #000,
-		0 3px 10px rgb(0 0 0 / 0.55);
-	}
+	-webkit-text-stroke: var(--outline-width, 1px) black;
+	text-shadow: var(--text-outline-shadow, 0 2px 6px rgb(0 0 0 / 0.45));
+}
 
 .meme-box__drag:active {
 	cursor: grabbing;
@@ -102,15 +97,15 @@ select {
 	background: var(--color-secondary);
 	box-shadow: 0 4px 10px rgb(0 0 0 / 0.3);
 	cursor: nwse-resize;
-	}
+}
 
 .template-card.is-active {
 	border-color: color-mix(in srgb, var(--color-primary) 70%, white 8%);
 	box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08), 0 10px 24px rgb(17 24 39 / 0.18);
-	}
+}
 
 @media (max-width: 640px) {
 	.meme-box__drag {
-		-webkit-text-stroke: 1.5px black;
+		text-shadow: var(--text-outline-shadow, 0 2px 6px rgb(0 0 0 / 0.45));
 	}
 }

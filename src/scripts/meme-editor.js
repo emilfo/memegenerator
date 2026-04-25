@@ -16,12 +16,16 @@ const refs = {
 	uploadInput: document.querySelector('#image-upload'),
 	addTextButton: document.querySelector('#add-text-box'),
 	downloadButton: document.querySelector('#download-meme'),
+	exportLayoutButton: document.querySelector('#export-layout'),
+	importLayoutInput: document.querySelector('#import-layout'),
 	emptySelection: document.querySelector('#empty-selection'),
 	captionForm: document.querySelector('#caption-form'),
 	textInput: document.querySelector('#text-input'),
 	alignInput: document.querySelector('#align-input'),
 	fontSizeInput: document.querySelector('#font-size-input'),
 	fontSizeValue: document.querySelector('#font-size-value'),
+	outlineWidthInput: document.querySelector('#outline-width-input'),
+	outlineWidthValue: document.querySelector('#outline-width-value'),
 	widthInput: document.querySelector('#width-input'),
 	widthValue: document.querySelector('#width-value'),
 	heightInput: document.querySelector('#height-input'),
@@ -36,6 +40,37 @@ const refs = {
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
+const makeTextShadow = (outlineWidth) => {
+	if (outlineWidth <= 0) {
+		return '0 2px 6px rgb(0 0 0 / 0.45)';
+	}
+
+	return [
+		`${outlineWidth}px ${outlineWidth}px 0 #000`,
+		`${-outlineWidth}px ${outlineWidth}px 0 #000`,
+		`${outlineWidth}px ${-outlineWidth}px 0 #000`,
+		`${-outlineWidth}px ${-outlineWidth}px 0 #000`,
+		'0 2px 6px rgb(0 0 0 / 0.45)'
+	].join(', ');
+};
+
+const sanitizeBox = (box) => {
+	const width = clamp(Number(box.width ?? 84), 12, 100);
+	const height = clamp(Number(box.height ?? 16), 8, 100);
+
+	return {
+		id: box.id ?? crypto.randomUUID(),
+		text: typeof box.text === 'string' ? box.text : 'TEXT',
+		x: clamp(Number(box.x ?? 8), 0, 100 - width),
+		y: clamp(Number(box.y ?? 8), 0, 100 - height),
+		width,
+		height,
+		fontSize: clamp(Number(box.fontSize ?? 62), 20, 120),
+		outlineWidth: clamp(Number(box.outlineWidth ?? 1), 0, 8),
+		align: ['left', 'center', 'right'].includes(box.align) ? box.align : 'center'
+	};
+};
+
 const createDefaultBoxes = () => [
 	{
 		id: crypto.randomUUID(),
@@ -45,6 +80,7 @@ const createDefaultBoxes = () => [
 		width: 84,
 		height: 16,
 		fontSize: 62,
+		outlineWidth: 1,
 		align: 'center'
 	},
 	{
@@ -55,9 +91,10 @@ const createDefaultBoxes = () => [
 		width: 84,
 		height: 16,
 		fontSize: 62,
+		outlineWidth: 1,
 		align: 'center'
 	}
-];
+].map(sanitizeBox);
 
 const state = {
 	image: {
@@ -115,6 +152,8 @@ const renderBoxes = () => {
 		dragHandle.style.justifyContent =
 			box.align === 'left' ? 'flex-start' : box.align === 'right' ? 'flex-end' : 'center';
 		dragHandle.style.textAlign = box.align;
+		dragHandle.style.setProperty('--outline-width', `${box.outlineWidth}px`);
+		dragHandle.style.setProperty('--text-outline-shadow', makeTextShadow(box.outlineWidth));
 		dragHandle.textContent = box.text || 'TEXT';
 
 		const resizeHandle = document.createElement('button');
@@ -131,6 +170,7 @@ const renderBoxes = () => {
 
 const updateValueLabels = (box) => {
 	refs.fontSizeValue.textContent = `${box.fontSize}px`;
+	refs.outlineWidthValue.textContent = `${box.outlineWidth}px`;
 	refs.widthValue.textContent = `${box.width}%`;
 	refs.heightValue.textContent = `${box.height}%`;
 	refs.xValue.textContent = `${box.x}%`;
@@ -152,6 +192,7 @@ const renderForm = () => {
 	refs.textInput.value = box.text;
 	refs.alignInput.value = box.align;
 	refs.fontSizeInput.value = String(box.fontSize);
+	refs.outlineWidthInput.value = String(box.outlineWidth);
 	refs.widthInput.value = String(box.width);
 	refs.heightInput.value = String(box.height);
 	refs.xInput.value = String(Math.round(box.x));
@@ -161,7 +202,7 @@ const renderForm = () => {
 };
 
 const updateBox = (id, patch) => {
-	state.boxes = state.boxes.map((box) => (box.id === id ? { ...box, ...patch } : box));
+	state.boxes = state.boxes.map((box) => (box.id === id ? sanitizeBox({ ...box, ...patch }) : box));
 	renderBoxes();
 	renderForm();
 };
@@ -250,10 +291,11 @@ const addTextBox = (box = null) => {
 		width: 64,
 		height: 16,
 		fontSize: 54,
+		outlineWidth: 1,
 		align: 'center'
 	};
 
-	state.boxes = [...state.boxes, nextBox];
+	state.boxes = [...state.boxes, sanitizeBox(nextBox)];
 	setSelectedBox(nextBox.id);
 };
 
@@ -313,6 +355,46 @@ const fitTextLines = (context, text, maxWidth) => {
 	return lines;
 };
 
+const exportLayout = () => {
+	const layout = {
+		version: 1,
+		boxes: state.boxes.map(({ id, text, x, y, width, height, fontSize, outlineWidth, align }) => ({
+			id,
+			text,
+			x,
+			y,
+			width,
+			height,
+			fontSize,
+			outlineWidth,
+			align
+		}))
+	};
+
+	const blob = new Blob([JSON.stringify(layout, null, 2)], { type: 'application/json' });
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement('a');
+	link.href = url;
+	link.download = 'meme-layout.json';
+	link.click();
+	URL.revokeObjectURL(url);
+};
+
+const importLayout = async (file) => {
+	const content = await file.text();
+	const parsed = JSON.parse(content);
+	const boxes = Array.isArray(parsed) ? parsed : parsed.boxes;
+
+	if (!Array.isArray(boxes) || !boxes.length) {
+		throw new Error('Layout file does not contain any text boxes.');
+	}
+
+	state.boxes = boxes.map((box) => sanitizeBox({ ...box, id: crypto.randomUUID() }));
+	state.selectedId = state.boxes[0]?.id ?? null;
+	renderBoxes();
+	renderForm();
+};
+
 const exportMeme = async () => {
 	const image = new Image();
 	image.src = state.image.src;
@@ -342,7 +424,7 @@ const exportMeme = async () => {
 
 		context.font = `900 ${fontSize}px Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif`;
 		context.textAlign = box.align;
-		context.lineWidth = Math.max(4, fontSize * 0.12);
+		context.lineWidth = Math.max(0, box.outlineWidth * (canvas.width / refs.stage.clientWidth));
 
 		const lines = fitTextLines(context, box.text || 'TEXT', width);
 		const lineHeight = fontSize * 0.95;
@@ -353,7 +435,9 @@ const exportMeme = async () => {
 
 		lines.forEach((line, index) => {
 			const textY = startY + index * lineHeight;
-			context.strokeText(line, textX, textY, width);
+			if (context.lineWidth > 0) {
+				context.strokeText(line, textX, textY, width);
+			}
 			context.fillText(line, textX, textY, width);
 		});
 	});
@@ -406,6 +490,22 @@ refs.uploadInput.addEventListener('change', (event) => {
 refs.addTextButton.addEventListener('click', () => addTextBox());
 refs.duplicateButton.addEventListener('click', duplicateSelectedBox);
 refs.deleteButton.addEventListener('click', deleteSelectedBox);
+refs.exportLayoutButton.addEventListener('click', exportLayout);
+refs.importLayoutInput.addEventListener('change', async (event) => {
+	const file = event.currentTarget.files?.[0];
+	if (!file) {
+		return;
+	}
+
+	try {
+		await importLayout(file);
+	} catch (error) {
+		console.error(error);
+		window.alert('Could not import the text layout file.');
+	}
+
+	refs.importLayoutInput.value = '';
+});
 refs.downloadButton.addEventListener('click', () => {
 	exportMeme().catch((error) => {
 		console.error(error);
@@ -429,6 +529,7 @@ refs.alignInput.addEventListener('change', (event) => {
 
 [
 	[refs.fontSizeInput, 'fontSize'],
+	[refs.outlineWidthInput, 'outlineWidth'],
 	[refs.widthInput, 'width'],
 	[refs.heightInput, 'height'],
 	[refs.xInput, 'x'],
