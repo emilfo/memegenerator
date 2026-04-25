@@ -40,7 +40,6 @@ const refs = {
 };
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-const defaultBoxLabel = (index) => (index === 0 ? 'TOP TEXT' : index === 1 ? 'BOTTOM TEXT' : `TEXT ${index + 1}`);
 const defaultLayoutBoxes = [
 	{ x: 1.02, y: 1.02, width: 97.96, height: 25, rotation: 0, align: 'center', verticalAlign: 'top', outlineWidth: 1 },
 	{ x: 1.02, y: 73.98, width: 97.96, height: 25, rotation: 0, align: 'center', verticalAlign: 'bottom', outlineWidth: 1 }
@@ -80,10 +79,10 @@ const sanitizeBox = (box) => {
 };
 
 const createBoxesFromLayout = (layoutBoxes = defaultLayoutBoxes) =>
-	layoutBoxes.map((box, index) =>
+	layoutBoxes.map((box) =>
 		sanitizeBox({
 			id: crypto.randomUUID(),
-			text: defaultBoxLabel(index),
+			text: '',
 			x: box.x,
 			y: box.y,
 			width: box.width,
@@ -441,6 +440,10 @@ const exportMeme = async () => {
 	context.lineCap = 'round';
 
 	state.boxes.forEach((box) => {
+		if (!box.text.trim()) {
+			return;
+		}
+
 		const x = (box.x / 100) * canvas.width;
 		const y = (box.y / 100) * canvas.height;
 		const width = (box.width / 100) * canvas.width;
