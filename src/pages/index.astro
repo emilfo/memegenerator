@@ -36,22 +36,9 @@ const initialBoxes = drakeFrontpageLayout.boxes;
 		>
 			<section class="card border border-base-300 bg-base-100 shadow-xl">
 				<div class="card-body gap-4">
-					<div class="flex flex-wrap items-start justify-between gap-3">
-						<div>
-							<h2 class="card-title">Editor</h2>
-							<p id="active-image-name" class="text-sm text-base-content/60">Drake Hotline Bling</p>
-						</div>
-						<div class="flex flex-wrap justify-end gap-2">
-							<div class="join">
-								<button id="add-text-box" type="button" class="btn btn-primary join-item">Add text box</button>
-								<button id="download-meme" type="button" class="btn btn-secondary join-item">Download PNG</button>
-							</div>
-							<div class="join">
-								<button id="export-layout" type="button" class="btn btn-outline join-item">Export layout</button>
-								<label class="btn btn-outline join-item" for="import-layout">Import layout</label>
-							</div>
-							<input id="import-layout" type="file" accept="application/json,.json" class="hidden" />
-						</div>
+					<div>
+						<h2 class="card-title">Editor</h2>
+						<p id="active-image-name" class="text-sm text-base-content/60">Drake Hotline Bling</p>
 					</div>
 
 					<div class="rounded-box border border-dashed border-base-300 bg-base-200/70 p-3 sm:p-4">
@@ -59,6 +46,18 @@ const initialBoxes = drakeFrontpageLayout.boxes;
 							<img id="editor-image" src={templates[0].src} alt="Selected meme template" class="block h-auto w-full select-none" />
 							<div id="text-layer" class="pointer-events-none absolute inset-0"></div>
 						</div>
+					</div>
+
+					<div class="flex flex-wrap justify-center gap-2">
+						<div class="join">
+							<button id="add-text-box" type="button" class="btn btn-primary join-item">Add text box</button>
+							<button id="download-meme" type="button" class="btn btn-secondary join-item">Download PNG</button>
+						</div>
+						<div class="join">
+							<button id="export-layout" type="button" class="btn btn-outline join-item">Export layout</button>
+							<label class="btn btn-outline join-item" for="import-layout">Import layout</label>
+						</div>
+						<input id="import-layout" type="file" accept="application/json,.json" class="hidden" />
 					</div>
 
 					<p class="text-sm text-base-content/60">
