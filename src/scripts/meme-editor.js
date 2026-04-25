@@ -522,6 +522,14 @@ refs.textLayer.addEventListener('click', (event) => {
 	setSelectedBox(target.dataset.id);
 });
 
+refs.stage.addEventListener('click', (event) => {
+	if (event.target.closest('.meme-box')) {
+		return;
+	}
+
+	setSelectedBox(null);
+});
+
 window.addEventListener('pointermove', handlePointerMove);
 window.addEventListener('pointerup', stopInteraction);
 window.addEventListener('pointercancel', stopInteraction);
