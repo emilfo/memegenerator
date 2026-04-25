@@ -75,8 +75,8 @@ select {
 	font-weight: 900;
 	line-height: 0.95;
 	letter-spacing: 0.04em;
-	-webkit-text-stroke: var(--outline-width, 1px) black;
-	text-shadow: var(--text-outline-shadow, 0 2px 6px rgb(0 0 0 / 0.45));
+	-webkit-text-stroke: calc(var(--outline-width, 1px) * 0.55) black;
+	text-shadow: var(--text-outline-shadow, 0 1px 3px rgb(0 0 0 / 0.35));
 }
 
 .meme-box__drag:active {

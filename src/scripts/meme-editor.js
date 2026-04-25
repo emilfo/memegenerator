@@ -49,16 +49,18 @@ const defaultLayoutBoxes = [
 ];
 
 const makeTextShadow = (outlineWidth) => {
+	const previewOutline = Math.max(0.5, outlineWidth * 0.55);
+
 	if (outlineWidth <= 0) {
-		return '0 2px 6px rgb(0 0 0 / 0.45)';
+		return '0 1px 3px rgb(0 0 0 / 0.35)';
 	}
 
 	return [
-		`${outlineWidth}px ${outlineWidth}px 0 #000`,
-		`${-outlineWidth}px ${outlineWidth}px 0 #000`,
-		`${outlineWidth}px ${-outlineWidth}px 0 #000`,
-		`${-outlineWidth}px ${-outlineWidth}px 0 #000`,
-		'0 2px 6px rgb(0 0 0 / 0.45)'
+		`${previewOutline}px ${previewOutline}px 0 #000`,
+		`${-previewOutline}px ${previewOutline}px 0 #000`,
+		`${previewOutline}px ${-previewOutline}px 0 #000`,
+		`${-previewOutline}px ${-previewOutline}px 0 #000`,
+		'0 1px 3px rgb(0 0 0 / 0.35)'
 	].join(', ');
 };
 
