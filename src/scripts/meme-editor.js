@@ -6,6 +6,7 @@ if (!root) {
 
 const templates = JSON.parse(root.dataset.templates ?? '[]');
 const defaultImage = root.dataset.defaultImage ?? templates[0]?.src ?? '';
+const templateMap = new Map(templates.map((template) => [template.id, template]));
 
 const refs = {
 	stage: document.querySelector('#editor-stage'),
@@ -39,6 +40,11 @@ const refs = {
 };
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const defaultBoxLabel = (index) => (index === 0 ? 'TOP TEXT' : index === 1 ? 'BOTTOM TEXT' : `TEXT ${index + 1}`);
+const defaultLayoutBoxes = [
+	{ x: 1.02, y: 1.02, width: 97.96, height: 25, rotation: 0, align: 'center', verticalAlign: 'top', outlineWidth: 1 },
+	{ x: 1.02, y: 73.98, width: 97.96, height: 25, rotation: 0, align: 'center', verticalAlign: 'bottom', outlineWidth: 1 }
+];
 
 const makeTextShadow = (outlineWidth) => {
 	if (outlineWidth <= 0) {
@@ -67,34 +73,30 @@ const sanitizeBox = (box) => {
 		height,
 		fontSize: clamp(Number(box.fontSize ?? 62), 20, 120),
 		outlineWidth: clamp(Number(box.outlineWidth ?? 1), 0, 8),
-		align: ['left', 'center', 'right'].includes(box.align) ? box.align : 'center'
+		align: ['left', 'center', 'right'].includes(box.align) ? box.align : 'center',
+		verticalAlign: ['top', 'middle', 'bottom'].includes(box.verticalAlign) ? box.verticalAlign : 'middle',
+		rotation: Number(box.rotation ?? 0)
 	};
 };
 
-const createDefaultBoxes = () => [
-	{
-		id: crypto.randomUUID(),
-		text: 'TOP TEXT',
-		x: 8,
-		y: 4,
-		width: 84,
-		height: 16,
-		fontSize: 62,
-		outlineWidth: 1,
-		align: 'center'
-	},
-	{
-		id: crypto.randomUUID(),
-		text: 'BOTTOM TEXT',
-		x: 8,
-		y: 79,
-		width: 84,
-		height: 16,
-		fontSize: 62,
-		outlineWidth: 1,
-		align: 'center'
-	}
-].map(sanitizeBox);
+const createBoxesFromLayout = (layoutBoxes = defaultLayoutBoxes) =>
+	layoutBoxes.map((box, index) =>
+		sanitizeBox({
+			id: crypto.randomUUID(),
+			text: defaultBoxLabel(index),
+			x: box.x,
+			y: box.y,
+			width: box.width,
+			height: box.height,
+			fontSize: box.fontSize ?? clamp(Math.round((box.height ?? 16) * 3), 24, 72),
+			outlineWidth: box.outlineWidth == null ? 1 : Math.max(1, Number(box.outlineWidth)),
+			align: box.align ?? 'center',
+			verticalAlign: box.verticalAlign ?? 'middle',
+			rotation: box.rotation ?? 0
+		})
+	);
+
+const createDefaultBoxes = () => createBoxesFromLayout();
 
 const state = {
 	image: {
@@ -104,7 +106,7 @@ const state = {
 		naturalWidth: 1,
 		naturalHeight: 1
 	},
-	boxes: createDefaultBoxes(),
+	boxes: createBoxesFromLayout(templates[0]?.defaultBoxes),
 	selectedId: null,
 	interaction: null
 };
@@ -142,6 +144,8 @@ const renderBoxes = () => {
 		element.style.top = `${box.y}%`;
 		element.style.width = `${box.width}%`;
 		element.style.height = `${box.height}%`;
+		element.style.transform = `rotate(${box.rotation}deg)`;
+		element.style.transformOrigin = 'center center';
 
 		const dragHandle = document.createElement('button');
 		dragHandle.type = 'button';
@@ -151,6 +155,8 @@ const renderBoxes = () => {
 		dragHandle.style.fontSize = `${box.fontSize}px`;
 		dragHandle.style.justifyContent =
 			box.align === 'left' ? 'flex-start' : box.align === 'right' ? 'flex-end' : 'center';
+		dragHandle.style.alignItems =
+			box.verticalAlign === 'top' ? 'flex-start' : box.verticalAlign === 'bottom' ? 'flex-end' : 'center';
 		dragHandle.style.textAlign = box.align;
 		dragHandle.style.setProperty('--outline-width', `${box.outlineWidth}px`);
 		dragHandle.style.setProperty('--text-outline-shadow', makeTextShadow(box.outlineWidth));
@@ -265,6 +271,13 @@ const syncImageMetrics = () => {
 	refs.textLayer.style.height = '100%';
 };
 
+const resetBoxes = (layoutBoxes = defaultLayoutBoxes) => {
+	state.boxes = createBoxesFromLayout(layoutBoxes);
+	state.selectedId = state.boxes[0]?.id ?? null;
+	renderBoxes();
+	renderForm();
+};
+
 const loadImage = (src, name, fileUrl = null) => {
 	if (state.image.fileUrl && state.image.fileUrl !== fileUrl) {
 		URL.revokeObjectURL(state.image.fileUrl);
@@ -280,6 +293,15 @@ const loadImage = (src, name, fileUrl = null) => {
 	refs.image.src = src;
 	refs.image.alt = name;
 	renderTemplateSelection();
+};
+
+const selectTemplate = (template) => {
+	if (!template) {
+		return;
+	}
+
+	loadImage(template.src, template.name);
+	resetBoxes(template.defaultBoxes);
 };
 
 const addTextBox = (box = null) => {
@@ -367,7 +389,9 @@ const exportLayout = () => {
 			height,
 			fontSize,
 			outlineWidth,
-			align
+			align,
+			rotation: state.boxes.find((box) => box.id === id)?.rotation ?? 0,
+			verticalAlign: state.boxes.find((box) => box.id === id)?.verticalAlign ?? 'middle'
 		}))
 	};
 
@@ -421,7 +445,14 @@ const exportMeme = async () => {
 		const width = (box.width / 100) * canvas.width;
 		const height = (box.height / 100) * canvas.height;
 		const fontSize = box.fontSize * (canvas.width / refs.stage.clientWidth);
+		const centerX = x + width / 2;
+		const centerY = y + height / 2;
+		const localX = -width / 2;
+		const localY = -height / 2;
 
+		context.save();
+		context.translate(centerX, centerY);
+		context.rotate((box.rotation * Math.PI) / 180);
 		context.font = `900 ${fontSize}px Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif`;
 		context.textAlign = box.align;
 		context.lineWidth = Math.max(0, box.outlineWidth * (canvas.width / refs.stage.clientWidth));
@@ -429,9 +460,14 @@ const exportMeme = async () => {
 		const lines = fitTextLines(context, box.text || 'TEXT', width);
 		const lineHeight = fontSize * 0.95;
 		const blockHeight = Math.max(lineHeight, lines.length * lineHeight);
-		const startY = y + (height - blockHeight) / 2 + lineHeight / 2;
+		const startY =
+			box.verticalAlign === 'top'
+				? localY + lineHeight / 2
+				: box.verticalAlign === 'bottom'
+					? localY + height - blockHeight + lineHeight / 2
+					: localY + (height - blockHeight) / 2 + lineHeight / 2;
 		const textX =
-			box.align === 'left' ? x : box.align === 'right' ? x + width : x + width / 2;
+			box.align === 'left' ? localX : box.align === 'right' ? localX + width : localX + width / 2;
 
 		lines.forEach((line, index) => {
 			const textY = startY + index * lineHeight;
@@ -440,6 +476,7 @@ const exportMeme = async () => {
 			}
 			context.fillText(line, textX, textY, width);
 		});
+		context.restore();
 	});
 
 	const link = document.createElement('a');
@@ -472,7 +509,7 @@ window.addEventListener('pointercancel', stopInteraction);
 
 refs.templateButtons.forEach((button) => {
 	button.addEventListener('click', () => {
-		loadImage(button.dataset.templateSrc, button.querySelector('p')?.textContent?.trim() ?? 'Template');
+		selectTemplate(templateMap.get(button.dataset.templateId));
 	});
 });
 
@@ -484,6 +521,7 @@ refs.uploadInput.addEventListener('change', (event) => {
 
 	const fileUrl = URL.createObjectURL(file);
 	loadImage(fileUrl, file.name, fileUrl);
+	resetBoxes();
 	refs.uploadInput.value = '';
 });
 
