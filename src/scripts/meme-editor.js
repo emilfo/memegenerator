@@ -1,3 +1,5 @@
+import { toPng } from 'html-to-image';
+
 const root = document.querySelector('#meme-editor');
 
 if (!root) {
@@ -506,80 +508,22 @@ const importLayout = async (file) => {
 };
 
 const exportMeme = async () => {
-	const image = new Image();
-	image.src = state.image.src;
-	await image.decode();
+	refs.stage.classList.add('is-exporting');
 
-	const canvas = document.createElement('canvas');
-	canvas.width = image.naturalWidth;
-	canvas.height = image.naturalHeight;
-
-	const context = canvas.getContext('2d');
-	if (!context) {
-		return;
+	let dataUrl;
+	try {
+		const scale = Math.max(2, state.image.naturalWidth / refs.stage.clientWidth);
+		dataUrl = await toPng(refs.stage, {
+			backgroundColor: '#ffffff',
+			cacheBust: true,
+			pixelRatio: scale
+		});
+	} finally {
+		refs.stage.classList.remove('is-exporting');
 	}
 
-	context.drawImage(image, 0, 0);
-	context.textBaseline = 'middle';
-	context.fillStyle = '#ffffff';
-	context.strokeStyle = '#000000';
-	context.lineJoin = 'round';
-	context.lineCap = 'round';
-
-	state.boxes.forEach((box) => {
-		if (!box.text.trim()) {
-			return;
-		}
-
-		const x = (box.x / 100) * canvas.width;
-		const y = (box.y / 100) * canvas.height;
-		const width = (box.width / 100) * canvas.width;
-		const height = (box.height / 100) * canvas.height;
-		const scale = canvas.width / refs.stage.clientWidth;
-		const fontSize = box.fontSize * scale;
-		const centerX = x + width / 2;
-		const centerY = y + height / 2;
-		const localX = -width / 2;
-		const localY = -height / 2;
-		const outlineWidth = Math.max(0, box.outlineWidth * scale * 1.15);
-		const shadowBlur = 6 * scale;
-		const shadowOffsetY = 2 * scale;
-
-		context.save();
-		context.translate(centerX, centerY);
-		context.rotate((box.rotation * Math.PI) / 180);
-		context.font = `900 ${fontSize}px Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif`;
-		context.textAlign = box.align;
-		context.lineWidth = outlineWidth;
-		context.shadowColor = 'rgba(0, 0, 0, 0.45)';
-		context.shadowBlur = shadowBlur;
-		context.shadowOffsetX = 0;
-		context.shadowOffsetY = shadowOffsetY;
-
-		const lines = fitTextLines(context, box.text || 'TEXT', width);
-		const lineHeight = fontSize * 0.95;
-		const blockHeight = Math.max(lineHeight, lines.length * lineHeight);
-		const startY =
-			box.verticalAlign === 'top'
-				? localY + lineHeight / 2
-				: box.verticalAlign === 'bottom'
-					? localY + height - blockHeight + lineHeight / 2
-					: localY + (height - blockHeight) / 2 + lineHeight / 2;
-		const textX =
-			box.align === 'left' ? localX : box.align === 'right' ? localX + width : localX + width / 2;
-
-		lines.forEach((line, index) => {
-			const textY = startY + index * lineHeight;
-			if (context.lineWidth > 0) {
-				context.strokeText(line, textX, textY, width);
-			}
-			context.fillText(line, textX, textY, width);
-		});
-		context.restore();
-	});
-
 	const link = document.createElement('a');
-	link.href = canvas.toDataURL('image/png');
+	link.href = dataUrl;
 	link.download = 'meme.png';
 	link.click();
 };

@@ -102,6 +102,16 @@ select {
 	display: inline-flex;
 }
 
+.meme-stage.is-exporting .meme-box {
+	border-color: transparent;
+	background: transparent;
+	box-shadow: none;
+}
+
+.meme-stage.is-exporting .meme-box__resize {
+	display: none;
+}
+
 .template-card.is-active {
 	border-color: color-mix(in srgb, var(--color-primary) 70%, white 8%);
 	box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08), 0 10px 24px rgb(17 24 39 / 0.18);
