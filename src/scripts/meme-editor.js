@@ -92,7 +92,7 @@ const createBoxesFromLayout = (layoutBoxes = defaultLayoutBoxes, preserveText = 
 	layoutBoxes.map((box) =>
 		sanitizeBox({
 			id: crypto.randomUUID(),
-			text: preserveText ? (typeof box.text === 'string' ? box.text : '') : '',
+			text: preserveText ? (typeof box.text === 'string' ? box.text : 'text') : 'text',
 			x: box.x,
 			y: box.y,
 			width: box.width,
@@ -484,7 +484,7 @@ const selectTemplate = (template) => {
 const addTextBox = (box = null) => {
 	const nextBox = box ?? {
 		id: crypto.randomUUID(),
-		text: 'NEW TEXT',
+		text: 'text',
 		x: 18,
 		y: 18,
 		width: 64,
