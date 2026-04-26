@@ -69,13 +69,13 @@ select {
 	text-align: center;
 	text-transform: uppercase;
 	word-break: break-word;
-	color: white;
+	color: transparent;
 	font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
 	font-weight: 900;
 	line-height: 0.95;
 	letter-spacing: 0.04em;
-	-webkit-text-stroke: calc(var(--outline-width, 1px) * 0.55) black;
-	text-shadow: var(--text-outline-shadow, 0 1px 3px rgb(0 0 0 / 0.35));
+	-webkit-text-stroke: 0 transparent;
+	text-shadow: none;
 }
 
 .meme-box__drag:active {
@@ -102,14 +102,16 @@ select {
 	display: inline-flex;
 }
 
-.meme-stage.is-exporting .meme-box {
-	border-color: transparent;
-	background: transparent;
-	box-shadow: none;
-}
-
-.meme-stage.is-exporting .meme-box__resize {
-	display: none;
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
 }
 
 .template-card.is-active {
@@ -118,7 +120,4 @@ select {
 }
 
 @media (max-width: 640px) {
-	.meme-box__drag {
-		text-shadow: var(--text-outline-shadow, 0 2px 6px rgb(0 0 0 / 0.45));
-	}
 }

@@ -43,7 +43,8 @@ const initialBoxes = drakeFrontpageLayout.boxes;
 
 					<div class="rounded-box border border-dashed border-base-300 bg-base-200/70 p-3 sm:p-4">
 						<div id="editor-stage" class="meme-stage mx-auto max-w-full">
-							<img id="editor-image" src={templates[0].src} alt="Selected meme template" class="block h-auto w-full select-none" />
+							<img id="editor-image" src={templates[0].src} alt="Selected meme template" class="sr-only" />
+							<canvas id="preview-canvas" class="block h-full w-full select-none"></canvas>
 							<div id="text-layer" class="pointer-events-none absolute inset-0"></div>
 						</div>
 					</div>

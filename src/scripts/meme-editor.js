@@ -1,5 +1,3 @@
-import { toPng } from 'html-to-image';
-
 const root = document.querySelector('#meme-editor');
 
 if (!root) {
@@ -19,6 +17,7 @@ const refs = {
 	templatePageInfo: document.querySelector('#template-page-info'),
 	stage: document.querySelector('#editor-stage'),
 	image: document.querySelector('#editor-image'),
+	previewCanvas: document.querySelector('#preview-canvas'),
 	textLayer: document.querySelector('#text-layer'),
 	imageName: document.querySelector('#active-image-name'),
 	uploadInput: document.querySelector('#image-upload'),
@@ -135,6 +134,94 @@ const setSelectedBox = (id) => {
 
 const updateStageAspectRatio = () => {
 	refs.stage.style.aspectRatio = `${state.image.naturalWidth} / ${state.image.naturalHeight}`;
+};
+
+const drawBoxesOnCanvas = (context, outputWidth, outputHeight) => {
+	context.textBaseline = 'middle';
+	context.fillStyle = '#ffffff';
+	context.strokeStyle = '#000000';
+	context.lineJoin = 'round';
+	context.lineCap = 'round';
+
+	state.boxes.forEach((box) => {
+		if (!box.text.trim()) {
+			return;
+		}
+
+		const x = (box.x / 100) * outputWidth;
+		const y = (box.y / 100) * outputHeight;
+		const width = (box.width / 100) * outputWidth;
+		const height = (box.height / 100) * outputHeight;
+		const scale = outputWidth / state.image.naturalWidth;
+		const fontSize = box.fontSize * scale;
+		const centerX = x + width / 2;
+		const centerY = y + height / 2;
+		const localX = -width / 2;
+		const localY = -height / 2;
+		const outlineWidth = Math.max(0, box.outlineWidth * scale * 1.15);
+		const shadowBlur = 6 * scale;
+		const shadowOffsetY = 2 * scale;
+
+		context.save();
+		context.translate(centerX, centerY);
+		context.rotate((box.rotation * Math.PI) / 180);
+		context.font = `900 ${fontSize}px Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif`;
+		context.textAlign = box.align;
+		context.lineWidth = outlineWidth;
+		context.shadowColor = 'rgba(0, 0, 0, 0.45)';
+		context.shadowBlur = shadowBlur;
+		context.shadowOffsetX = 0;
+		context.shadowOffsetY = shadowOffsetY;
+
+		const lines = fitTextLines(context, box.text || 'TEXT', width);
+		const lineHeight = fontSize * 0.95;
+		const blockHeight = Math.max(lineHeight, lines.length * lineHeight);
+		const startY =
+			box.verticalAlign === 'top'
+				? localY + lineHeight / 2
+				: box.verticalAlign === 'bottom'
+					? localY + height - blockHeight + lineHeight / 2
+					: localY + (height - blockHeight) / 2 + lineHeight / 2;
+		const textX =
+			box.align === 'left' ? localX : box.align === 'right' ? localX + width : localX + width / 2;
+
+		lines.forEach((line, index) => {
+			const textY = startY + index * lineHeight;
+			if (context.lineWidth > 0) {
+				context.strokeText(line, textX, textY, width);
+			}
+			context.fillText(line, textX, textY, width);
+		});
+		context.restore();
+	});
+};
+
+const renderPreviewCanvas = () => {
+	if (!refs.stage.clientWidth || !state.image.naturalWidth || !state.image.naturalHeight || !refs.image.complete) {
+		return;
+	}
+
+	const pixelRatio = window.devicePixelRatio || 1;
+	const stageWidth = refs.stage.clientWidth;
+	const stageHeight = refs.stage.clientHeight;
+	const canvasWidth = Math.max(1, Math.round(stageWidth * pixelRatio));
+	const canvasHeight = Math.max(1, Math.round(stageHeight * pixelRatio));
+
+	if (refs.previewCanvas.width !== canvasWidth || refs.previewCanvas.height !== canvasHeight) {
+		refs.previewCanvas.width = canvasWidth;
+		refs.previewCanvas.height = canvasHeight;
+	}
+
+	const context = refs.previewCanvas.getContext('2d');
+	if (!context) {
+		return;
+	}
+
+	context.clearRect(0, 0, canvasWidth, canvasHeight);
+	context.drawImage(refs.image, 0, 0, canvasWidth, canvasHeight);
+	drawBoxesOnCanvas(context, canvasWidth, canvasHeight);
+	refs.previewCanvas.style.width = '100%';
+	refs.previewCanvas.style.height = '100%';
 };
 
 const getTemplateButtons = () => [...refs.templateGrid.querySelectorAll('.template-card')];
@@ -258,6 +345,8 @@ const renderBoxes = () => {
 		element.append(dragHandle, resizeHandle);
 		refs.textLayer.append(element);
 	});
+
+	renderPreviewCanvas();
 };
 
 const updateValueLabels = (box) => {
@@ -508,22 +597,24 @@ const importLayout = async (file) => {
 };
 
 const exportMeme = async () => {
-	refs.stage.classList.add('is-exporting');
+	const image = new Image();
+	image.src = state.image.src;
+	await image.decode();
 
-	let dataUrl;
-	try {
-		const scale = Math.max(2, state.image.naturalWidth / refs.stage.clientWidth);
-		dataUrl = await toPng(refs.stage, {
-			backgroundColor: '#ffffff',
-			cacheBust: true,
-			pixelRatio: scale
-		});
-	} finally {
-		refs.stage.classList.remove('is-exporting');
+	const canvas = document.createElement('canvas');
+	canvas.width = image.naturalWidth;
+	canvas.height = image.naturalHeight;
+
+	const context = canvas.getContext('2d');
+	if (!context) {
+		return;
 	}
 
+	context.drawImage(image, 0, 0);
+	drawBoxesOnCanvas(context, canvas.width, canvas.height);
+
 	const link = document.createElement('a');
-	link.href = dataUrl;
+	link.href = canvas.toDataURL('image/png');
 	link.download = 'meme.png';
 	link.click();
 };
@@ -665,7 +756,10 @@ refs.alignInput.addEventListener('change', (event) => {
 refs.image.addEventListener('load', () => {
 	syncImageMetrics();
 	renderTemplateSelection();
+	renderPreviewCanvas();
 });
+
+window.addEventListener('resize', renderPreviewCanvas);
 
 window.addEventListener('beforeunload', () => {
 	if (state.image.fileUrl) {
